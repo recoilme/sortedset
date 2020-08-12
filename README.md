@@ -73,7 +73,7 @@ Buckets are keys with same prefix. Buckets guarded with `RWMutex`. Methods of bu
 	users.Put("pike")
 	users.Put("alice")
 	fmt.Println(users.Keys())
-    // output: [rob pike bob alice]
+	// output: [rob pike bob alice]
     
 	items := ordset.Bucket(set, "item")
 	items.Put("003")

@@ -11,7 +11,10 @@ WIP
 ## Usage
 
 install Go and run ```go get```:
-```go get github.com/recoilme/ordset```
+
+```go
+go get github.com/recoilme/ordset
+```
 
 ## Motivation
 
@@ -47,9 +50,9 @@ pages: page0["9", "6", "", ""] page1["5","3","",""] page2["1","","",""]
 
 That's all. 
 
-### Put
+### New/Put
 
-`OrdSet` has safe and unsafe version. Put is unsafe for use from multiple goroutines without mutex guard.
+`ordset` has safe and unsafe version. Put is **unsafe** for use from multiple goroutines without mutex guard.
 
 
 ```go
@@ -61,9 +64,9 @@ That's all.
 
 ```
 
-### Buckets (safe put)
+### Buckets
 
-Buckets are keys with same prefix. Buckets guarded with `RWMutex`. Methods of buckets are safe for concurrent usage.
+Buckets are keys with same prefix. Buckets guarded with `RWMutex`. Methods of buckets are **safe** for concurrent usage.
 
 ```go
 	set := ordset.New()

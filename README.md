@@ -130,7 +130,7 @@ BenchmarkAddAsc-8        2867678               533 ns/op              39 B/op   
 BenchmarkAddDesc-8       5039118               289 ns/op              40 B/op          0 allocs/op
 
 Google Btree (github.com/google/btree)
-BenchmarkAddRandGoogle-8         1000000              1505 ns/op              36 B/op          0 allocs/op
+BenchmarkAddRandGoogle-8 1000000              1505 ns/op              36 B/op          0 allocs/op
 
 ```
 

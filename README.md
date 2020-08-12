@@ -87,7 +87,7 @@ Buckets are keys with same prefix. Buckets guarded with `RWMutex`. Methods of bu
 `ordset` stores its keys in byte-sorted descending order. This makes sequential iteration over these keys extremely fast. To iterate over keys we'll use a `Cursor`:
 
 ```go
-    set := New()
+	set := New()
 	keys := randKeys(7)
 	bkt := Bucket(set, "")
 	for _, key := range keys {
@@ -96,8 +96,8 @@ Buckets are keys with same prefix. Buckets guarded with `RWMutex`. Methods of bu
 	c := bkt.Cursor()
 	for k := c.Last(); k != ""; k = c.Prev() {
 		fmt.Printf("[%s] ", k)
-    }
-    //[6] [5] [4] [3] [2] [1] [0]
+	}
+	//[6] [5] [4] [3] [2] [1] [0]
 ```
 
 The cursor allows you to move to a specific point in the list of keys and move forward or backward through the keys one at a time.
@@ -117,7 +117,7 @@ Cursor is method of bucket and safe for concurrent usage. Data in cursor ara con
 
 ```
 BenchmarkParallel:
-10,000 ops over 8 threads in 3ms, 		3,047,663/sec, 328 ns/op, 284.3 KB, 29 bytes/op
+10,000 ops over 8 threads in 3ms, 	3,047,663/sec, 328 ns/op, 284.3 KB, 29 bytes/op
 100,000 ops over 8 threads in 48ms, 	2,086,272/sec, 479 ns/op, 2.5 MB, 26 bytes/op
 1,000,000 ops over 8 threads in 955ms,  1,047,305/sec, 954 ns/op, 27.3 MB, 28 bytes/op
 10,000,000 ops over 8 threads in 18636ms, 536,587/sec, 1863 ns/op, 279.8 MB, 29 bytes/op

@@ -2,7 +2,7 @@
 
 [![GoDoc](https://godoc.org/github.com/recoilme/ordset?status.svg)](https://godoc.org/github.com/recoilme/ordset)
 
-Ordered set. Based on arrays.
+Package ordset provide ordered set, with strings/binary comparator, backed by arrays
 
 ## Status
 

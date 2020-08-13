@@ -76,24 +76,15 @@ func (set *OrdSet) put(key string) {
 		//not found - append to last
 		idx = len(set.pages) - 1
 	}
-	p := set.pages[idx]
-	if p.numItems == pageSize-1 {
+	if set.pages[idx].numItems == pageSize-1 {
 		set.split(idx)
 		set.put(key)
 		return
 	}
-	p = p.add(key)
-	//fmt.Printf("set before:%+v\n", set)
-	if p.modified {
-		// update indexes
-		set.idxs[idx*2] = p.max
-		set.idxs[idx*2+1] = p.min
-	}
-	//fmt.Printf("Ret %s %+v\n", key, set)
+	set.pages[idx].add(key)
 }
 
 func (p *page) add(key string) *page {
-	p.modified = false
 	//fmt.Println("add", key)
 	// desc
 	i := sort.Search(p.numItems, func(n int) bool {
@@ -110,7 +101,6 @@ func (p *page) add(key string) *page {
 		p.max = p.items[0]
 		p.min = key
 		p.numItems++
-		p.modified = true
 		//fmt.Println("data i == p.numItems:", p.items, p.min, p.max, p.numItems)
 		return p
 	}
@@ -120,7 +110,6 @@ func (p *page) add(key string) *page {
 		//prepend, new max
 		p.max = key
 		p.min = p.items[p.numItems-1]
-		p.modified = true
 	}
 	//insert - not modify min/max
 	copy(p.items[i+1:p.numItems+1], p.items[i:p.numItems])
@@ -360,11 +349,12 @@ func (set *OrdSet) has(key string) bool {
 	}
 
 	idx := i / 2
-	p := set.pages[idx]
 	if i == len(set.idxs) {
 		//not found - append to last
 		idx = len(set.pages) - 1
 	}
+	p := set.pages[idx]
+
 	i = sort.Search(p.numItems, func(n int) bool {
 		return p.items[n] <= key
 	})
@@ -381,4 +371,51 @@ func (set *OrdSet) Has(key string) bool {
 	set.Lock()
 	defer set.Unlock()
 	return set.has(key)
+}
+
+func (set *OrdSet) delete(key string) bool {
+	//fmt.Printf("Add %s %+v\n", key, set)
+	// sort desc
+	i := sort.Search(len(set.idxs), func(n int) bool {
+		return set.idxs[n] <= key
+	})
+
+	idx := i / 2
+	if i == len(set.idxs) {
+		//not found - append to last
+		idx = len(set.pages) - 1
+	}
+	//p := set.pages[idx]
+	i = sort.Search(set.pages[idx].numItems, func(n int) bool {
+		return set.pages[idx].items[n] <= key
+	})
+	//fmt.Println("page i", i, key, p.items[1] == key)
+	if i < set.pages[idx].numItems && set.pages[idx].items[i] == key {
+		//delete
+		//set.pages[idx].
+		copy(set.pages[idx].items[i:], set.pages[idx].items[i+1:])
+		if i == set.pages[idx].numItems-1 {
+			if i == 0 {
+				//delete set.pages[idx]
+				fmt.Println("delete set.pages[idx]")
+			} else {
+				//last elem
+				set.pages[idx].min = set.pages[idx].items[i-1]
+				//upd index
+			}
+		}
+		if i == 0 {
+			set.pages[idx].max = set.pages[idx].items[i]
+		}
+		set.pages[idx].numItems--
+		fmt.Printf("\n%s %+v\n", key, set.pages[idx])
+		return true
+	}
+	return false
+}
+
+func (set *OrdSet) Delete(key string) bool {
+	set.Lock()
+	defer set.Unlock()
+	return set.delete(key)
 }

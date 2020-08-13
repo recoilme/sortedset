@@ -3,7 +3,6 @@ package ordset
 import (
 	"fmt"
 	"math/rand"
-	"os"
 	"runtime"
 	"sort"
 	"sync/atomic"
@@ -245,11 +244,11 @@ func TestSliceIns(t *testing.T) {
 	slice = append(slice, "_", "_")
 	copy(slice[idx*2+2:], slice[idx*2+1:])
 	slice[idx*2+1] = "6"
-	fmt.Printf("%+v\n", slice)
+	//fmt.Printf("%+v\n", slice)
 	//[xgvfrjpr 6 lyqlvxfg lvzaatri dcwowvga csslcwvn ajfwsdnf]
 	copy(slice[idx*2+3:], slice[idx*2+2:])
 	slice[idx*2+2] = "5"
-	fmt.Printf("%+v\n", slice)
+	//fmt.Printf("%+v\n", slice)
 	//[xgvfrjpr 6 5 lyqlvxfg lvzaatri dcwowvga csslcwvn ajfwsdnf]
 
 	slice = []string{"xgvfrjpr", "lyqlvxfg", "lvzaatri", "dcwowvga", "csslcwvn", "ajfwsdnf"}
@@ -259,7 +258,7 @@ func TestSliceIns(t *testing.T) {
 	copy(slice[idx*2+3:], slice[idx*2+1:])
 	slice[idx*2+1] = "6"
 	slice[idx*2+2] = "5"
-	fmt.Printf("%+v\n", slice)
+	//fmt.Printf("%+v\n", slice)
 }
 
 func TestAscend(t *testing.T) {
@@ -289,7 +288,7 @@ func TestParallel(t *testing.T) {
 	set := New()
 	keys := randKeys(N)
 	bkt := Bucket(set, "")
-	lotsa.Output = os.Stdout
+	lotsa.Output = nil
 	lotsa.MemUsage = true
 	lotsa.Ops(N, runtime.NumCPU(), func(i, _ int) {
 		bkt.Put(keys[i])
@@ -346,7 +345,10 @@ func TestCursor(t *testing.T) {
 	c := bkt.Cursor()
 	assert.Equal(t, "6", c.Last())
 	//descend
-	for k := c.Last(); k != ""; k = c.Prev() {
-		fmt.Printf("[%s] ", k)
-	}
+	/*
+		for k := c.Last(); k != ""; k = c.Prev() {
+			_ = k
+			fmt.Printf("[%s] ", k)
+			set.Delete(k)
+		}*/
 }

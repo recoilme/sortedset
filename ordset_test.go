@@ -6,7 +6,9 @@ import (
 	"os"
 	"runtime"
 	"sort"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/lotsa"
@@ -15,7 +17,7 @@ import (
 var rnd *rand.Rand
 
 func init() {
-	seed := int64(1597150055724205000) //int64(time.Now().UnixNano())
+	seed := int64(time.Now().UnixNano())
 	fmt.Printf("seed: %d\n", seed)
 	rnd = rand.New(rand.NewSource(seed))
 }
@@ -54,17 +56,19 @@ func stringsEquals(a, b []string) (int, bool) {
 }
 
 //go test -benchmem -bench Add
-func BenchmarkAddRand(b *testing.B) {
+
+func BenchmarkAddAsc(b *testing.B) {
 	keys := randKeys(b.N)
-	set := New()
+	sort.Strings(keys)
+	set := New(0)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		set.Put(keys[i])
 	}
 }
 
-func BenchmarkAddAsc(b *testing.B) {
-	keys := randKeys(b.N)
+func BenchmarkAddAscBin(b *testing.B) {
+	keys := randKeysBin(b.N)
 	sort.Strings(keys)
 	set := New(0)
 	b.ResetTimer()
@@ -81,6 +85,57 @@ func BenchmarkAddDesc(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		set.Put(keys[i])
 	}
+}
+
+func BenchmarkAddDescBin(b *testing.B) {
+	keys := randKeysBin(b.N)
+	sort.Sort(sort.Reverse(sort.StringSlice(keys)))
+	set := New()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		set.Put(keys[i])
+	}
+}
+
+func BenchmarkAddRand(b *testing.B) {
+	keys := randKeys(b.N)
+	set := New()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		set.Put(keys[i])
+	}
+}
+
+func BenchmarkAddRandBin(b *testing.B) {
+	keys := randKeysBin(b.N)
+	set := New()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		set.Put(keys[i])
+	}
+}
+
+func BenchmarkParallel(b *testing.B) {
+	set := New()
+	keys := randKeysBin(b.N)
+	var i uint64 = 0
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			set.Put(keys[atomic.LoadUint64(&i)])
+			atomic.AddUint64(&i, 1)
+		}
+	})
+}
+
+func BenchmarkKeys(b *testing.B) {
+	keys := randKeysBin(b.N)
+	set := New()
+	for i := 0; i < b.N; i++ {
+		set.Put(keys[i])
+	}
+	b.ResetTimer()
+	set.Keys()
 }
 
 func TestDescend(t *testing.T) {
@@ -238,23 +293,30 @@ func TestBucket(t *testing.T) {
 	users.Put("alice")
 	users.Put("anna")
 	items := Bucket(set, "item")
-	items.Put("003")
-	//userrob userpike userbob useranna useralice user01 item003
-	//c := users.Cursor()
-	assert.Equal(t, "rob", users.Cursor().Last())
-	assert.Equal(t, "003", items.Cursor().Last())
-	/*
-		c := users.Cursor()
-		for k := c.Last(); k != ""; k = c.Prev() {
-			fmt.Printf("[%s] ", k)
-		}
-		fmt.Println()
 
-		c = items.Cursor()
-		for k := c.Last(); k != ""; k = c.Prev() {
-			fmt.Printf("[%s] ", k)
-		}
-		fmt.Println()*/
+	keys := randKeys(260)
+	for _, key := range keys {
+		items.Put(key)
+	}
+	items.Put("003")
+	set.Put("item") //"itemitem"
+
+	assert.Equal(t, "rob", users.Cursor().Last())
+	assert.Equal(t, "259", items.Cursor().Last())
+
+	c := users.Cursor()
+	var first string
+	for k := c.Last(); k != ""; k = c.Prev() {
+		first = k
+	}
+	assert.Equal(t, "01", first)
+
+	c = items.Cursor()
+	first = ""
+	for k := c.Last(); k != ""; k = c.Prev() {
+		first = k
+	}
+	assert.Equal(t, "000", first)
 }
 
 func TestCursor(t *testing.T) {

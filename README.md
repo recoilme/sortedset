@@ -52,8 +52,7 @@ That's all.
 
 ### New/Put
 
-`ordset` has safe and unsafe version. Put is **unsafe** for use from multiple goroutines without mutex guard.
-
+Put is **safe** for use from multiple goroutines.
 
 ```go
 	set := ordset.New()
@@ -61,12 +60,11 @@ That's all.
 	set.Put("b")
 	fmt.Println(set.Keys())
 	//[b a]
-
 ```
 
 ### Buckets
 
-Buckets are keys with same prefix. Buckets guarded with `RWMutex`. Methods of buckets are **safe** for concurrent usage.
+Buckets are keys with same prefix. Methods of buckets are **safe** for concurrent usage.
 
 ```go
 	set := ordset.New()
@@ -120,21 +118,28 @@ Cursor is method of bucket and safe for concurrent usage. Data in cursor ara con
 
 **BenchmarkParallel:**
 ```
-10,000 ops over 8 threads in 3ms, 	3,047,663/sec, 328 ns/op, 284.3 KB, 29 bytes/op
-100,000 ops over 8 threads in 48ms, 	2,086,272/sec, 479 ns/op, 2.5 MB, 26 bytes/op
-1,000,000 ops over 8 threads in 955ms,  1,047,305/sec, 954 ns/op, 27.3 MB, 28 bytes/op
-10,000,000 ops over 8 threads in 18636ms, 536,587/sec, 1863 ns/op, 279.8 MB, 29 bytes/op
+Put: 10,000 ops over 8 threads in 5ms, 2,094,220/sec, 477 ns/op, 274.9 KB, 28 bytes/op
 ```
 
 **BenchmarkSequental:**
 ```
-BenchmarkAddRand-8       1445605               919 ns/op              28 B/op          0 allocs/op
-BenchmarkAddAsc-8        2867678               533 ns/op              39 B/op          0 allocs/op
-BenchmarkAddDesc-8       5039118               289 ns/op              40 B/op          0 allocs/op
+goos: darwin
+goarch: amd64
+pkg: github.com/recoilme/ordset
+BenchmarkKeys-8                 18904903                77.6 ns/op            85 B/op          0 allocs/op
+BenchmarkAddAsc-8                2047423               680 ns/op              39 B/op          0 allocs/op
+BenchmarkAddAscBin-8             2069086               673 ns/op              39 B/op          0 allocs/op
+BenchmarkAddDesc-8               2908315               545 ns/op              39 B/op          0 allocs/op
+BenchmarkAddDescBin-8            3202050               498 ns/op              40 B/op          0 allocs/op
+BenchmarkAddRand-8               1204304              1057 ns/op              28 B/op          0 allocs/op
+BenchmarkAddRandBin-8            1000000              1001 ns/op              28 B/op          0 allocs/op
+BenchmarkParallel-8              1235898              1026 ns/op              29 B/op          0 allocs/op
 ```
 
 **Left-Leaning Red-Black (LLRB) implementation of 2-3 balanced binary search trees**
 (github.com/google/btree)
+
+Sequental:
 ```
 BenchmarkAddRandGoogle-8 1000000              1505 ns/op              36 B/op          0 allocs/op
 ```

@@ -20,12 +20,12 @@ type page struct {
 
 // OrdSet provide ordered set, with strings comparator
 type OrdSet struct {
+	sync.RWMutex
 	idxs  []string
 	pages []*page
 }
 
 type SyncBucket struct {
-	sync.RWMutex
 	Name    string
 	Set     *OrdSet
 	idxPage int
@@ -53,8 +53,14 @@ func New(intParams ...int) *OrdSet {
 }
 
 // Put will add key in set, if not present
-// Bucket may be empty
 func (set *OrdSet) Put(key string) {
+	set.Lock()
+	defer set.Unlock()
+	set.put(key)
+}
+
+// Put will add key in set, if not present
+func (set *OrdSet) put(key string) {
 	//fmt.Printf("Add %s %+v\n", key, set)
 	// sort desc
 	i := sort.Search(len(set.idxs), func(n int) bool {
@@ -73,7 +79,7 @@ func (set *OrdSet) Put(key string) {
 	p := set.pages[idx]
 	if p.numItems == pageSize-1 {
 		set.split(idx)
-		set.Put(key)
+		set.put(key)
 		return
 	}
 	p = p.add(key)
@@ -140,9 +146,9 @@ func (set *OrdSet) split(idx int) {
 	p.numItems = mid //254 -> 127
 	p.max = p.items[0]
 	p.min = p.items[mid-1] //[126]
-	//for i := mid; i < pageSize; i++ {
-	//	p.items[i] = ""
-	//}
+	for i := mid; i < pageSize; i++ {
+		p.items[i] = ""
+	}
 	//grow pages
 	set.pages = append(set.pages, nil)
 	//copy
@@ -164,6 +170,8 @@ func (set *OrdSet) split(idx int) {
 
 // Keys return all keys
 func (set *OrdSet) Keys() (result []string) {
+	set.RLock()
+	defer set.RUnlock()
 	for _, p := range set.pages {
 		for i, key := range p.items {
 			if i >= p.numItems {
@@ -206,15 +214,15 @@ func Bucket(set *OrdSet, name string) *SyncBucket {
 
 // Put add prefix to key
 func (bkt *SyncBucket) Put(key string) {
-	bkt.Lock()
-	defer bkt.Unlock()
 	bkt.Set.Put(bkt.Name + key)
 }
 
+//1597323014317877000
+//&{items:[userrob userpike userbob useranna useralice user01 itemzxlxibiq itemzwqwagcl itemzubqeabj itemztejlftb itemzoigtdql itemzmbixqpj itemzlzafkqq itemzefhtvej itemzbblspnm itemyscgyhze itemymxptnbi itemycthwabh itemxxpiajhh itemxwmqvlay itemxwmnciuo itemxvhhdwtu itemxvfgxlfe itemxlobjqak itemxhszckaq itemxfmxdowt itemxdvsxydz itemxdbvmmsv itemxcazsohq itemwzydxbug itemwxywyikw itemwwnqpprh itemwqmlaszl itemwmlnsxls itemwjmkcypk itemwielsnjv itemwckthyww itemvpvatlbl itemvogmqzvy itemvnwvcaep itemvlwicokh itemvggkjawz itemvgeprumq itemvfxjlxap itemvfwohngq itemvblmjczj itemuyqzncjk itemuulksexn itemunjqbjdi itemulzbnmzb itemuixczudg itemudrsylfz itemubxerokd itemttppgnlw itemtsggxmih itemtoshfqel itemtlmrjgri itemtjsqynxf itemthpvmwtb itemtggplmvm itemtfhblawi itemteihpnwd itemtcijmude itemtajvccsq itemszbltmfi itemswlvtgrw itemstaqmian itemsrihktjd itemspvuggla itemspopzdet itemspgtokbb itemskytmqkl itemsfatlllk itemseoujhko itemseefcsnu itemsdmrvxve itemsabyckur itemrxsyeglq itemrtpldeog itemrqwymfsf itemroqqegct itemrneuraro itemrlrtkwoh itemrknzubru itemrjqbbuvy itemrilncuqo itemrerxvpyf itemrarpscgl itemqtmtixqn itemqribxxpp itemqqgcldks itemqofipytu itemqmyrnbxv itemqlvcroth itemqfwmgbdw itempwlqsfnn itempslslbnp itemppdkblzt itempnyzsyzd itempnapltiv itemplvyqziy itempkzqkmwd itempjxtyyrh itempiqhahsn itempimkvewn itemphtvsxkz itemphmspsgo itempfaarruq itempefmijla itempecqafzz itemoyymwymc itemoweshgus itemovryokod itemovilxocr itemospiruhr itemopxscsds itemonzqoont itemomjnbdcv itemolbbjiij itemoiackjea itemogasoxmg itemobilbfrl itemoavbkcgy itemnzkcleve itemnwqiricf itemnuvkifap itemnthhjmqp itemnouthzto itemnoizbcsw itemnkpzajds itemnkafkhyg itemnfaenvwa itemndregpaq itemmntsgnje itemmhaogmeh itemmanrliop itemmaijkutz itemlrmevskn itemlretoznv itemlmiporya itemlmimkzgj itemllhhuopr itemljnpkonq itemlixyrbcd itemlfhtyhym itemldbnscay itemlanrjacx itemkwthrpui itemkvjtarff itemkumfrzss itemkrzkkkfi itemkqvgzudj itemkoliqwbs itemkmrgbxta itemkkniepcx itemkeqyimfb itemjvblgazc itemjtlbpftp itemjhavnsrm itemjfesbyzh itemjdcyxtfr itemjbxbydof itemiupbyqeo itemirzkmzpk itemirfroekw itemiqvuszwh itemiqcyszkn iteminnskdgs itemijvbiscv itemiiiketzy itemihocnhsj itemifqszbss itemibclkods itemhxihpszv itemhwedbmqb itemhumycbrn itemhpjvkkgm itemhmgninia itemhkjgqknt itemhibvlriu itemhhwhawsm itemhgrzyemt itemhfdvqarg itemhejdvwik itemhegvmudm itemhcjvabdw itemhbcnnjmv itemgzzzrdae itemgyhnpooc itemgxykqhuw itemgxkvqzbt itemgubqvlts itemgrudpotl itemgnaiwfcj itemgmstuefj itemgmbgwevc itemgjwhdivt itemgixdsrox itemghobzvzn itemgefceqbo itemgecfklmi itemgdgkfvao itemgcntyaam itemfzekuiek itemfsnigwxb itemfmsapaqx itemfmlxfesn itemflyyldte itemfihwvajb itemfibjxolh itemfgszfenf itemfbfmfwwn itemfarfjckz itemexrislmc itemevugsoko itememzbxsvv itememetlilk itemehtixtpi itemecxvrobb itemecewcqfm itemdzcyzcta itemdtbgqdwh itemdrpsvicf itemdptzjtmg itemdpeefkmc itemdmoqluuu itemdjtkdzgu itemdjqbmkcl itemdjoockbl itemdbfrqhkk itemcrviviay itemcqnlscek itemckfdzdpz itemcdqhydng itemcctghqgt itemcbrglfxf itembudgokch itembszudsfx itembsiwxfpt itembhxgurlw itembfpmshrv itembcpykxlz itembbconwra itembaihifwa itemayjjcekr itemaxuohvic itemaxqucubc itemaxagyeds itemasofcmvl itemaqtzsgvq itemaqhhxzmg itemakhlpgns itemajzcxzrn itemafwpvxgk itemadmgfkli ] min:itemndregpaq max:userrob numItems:133 modified:false}
 // Keys return all keys
 func (bkt *SyncBucket) Keys() (result []string) {
-	bkt.RWMutex.RLock()
-	defer bkt.RWMutex.RUnlock()
+	bkt.Set.RLock()
+	defer bkt.Set.RUnlock()
 	lenName := len(bkt.Name)
 	for _, p := range bkt.Set.pages {
 		for i, key := range p.items {
@@ -231,8 +239,8 @@ func (bkt *SyncBucket) Keys() (result []string) {
 
 // Last find last key with bucket prefix
 func (bkt *SyncBucket) last() (result string, idxPage, idxItem int) {
-	bkt.RLock()
-	defer bkt.RUnlock()
+	bkt.Set.RLock()
+	defer bkt.Set.RUnlock()
 
 	set := bkt.Set
 	key := bkt.Name
@@ -244,7 +252,7 @@ func (bkt *SyncBucket) last() (result string, idxPage, idxItem int) {
 	})
 	if i < len(set.idxs) && set.idxs[i] == key {
 		// key is present at data[i], nothing to do here
-		idxPage = i
+		idxPage = i / 2
 	} else {
 		idxPage = i / 2
 		if i == len(set.idxs) {
@@ -261,13 +269,13 @@ func (bkt *SyncBucket) last() (result string, idxPage, idxItem int) {
 		}
 		return p.items[n] <= key
 	})
+
 	if i < p.numItems && p.items[i] == key {
 		// key is present at data[i], nothing to do here
 		idxItem = i
 	}
 	if i == p.numItems {
 		// not found, new min, append at the end
-		println("fn", i)
 		idxItem = p.numItems
 	}
 	//insert or prepend
@@ -292,6 +300,7 @@ func (bkt *SyncBucket) Cursor() *Cursor {
 // Last moves the cursor to the last item  and returns its key.
 func (c *Cursor) Last() (key string) {
 	result, idxPage, idxItem := c.bucket.last()
+
 	if !strings.HasPrefix(result, c.bucket.Name) {
 		return ""
 	}
@@ -302,8 +311,9 @@ func (c *Cursor) Last() (key string) {
 
 // Prev moves the cursor to the previous item and returns its key.
 func (bkt *SyncBucket) Prev() (key string) {
-	bkt.RLock()
-	defer bkt.RUnlock()
+	bkt.Set.RLock()
+	defer bkt.Set.RUnlock()
+
 	p := bkt.Set.pages[bkt.idxPage]
 	if p == nil {
 		return ""

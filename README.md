@@ -134,7 +134,7 @@ BenchmarkAddDescBin-8            3202050               498 ns/op              40
 BenchmarkAddRand-8               1204304              1057 ns/op              28 B/op          0 allocs/op
 BenchmarkAddRandBin-8            1000000              1001 ns/op              28 B/op          0 allocs/op
 BenchmarkParallel-8              1235898              1026 ns/op              29 B/op          0 allocs/op
-BenchmarkHas-8           		 1000000              1035 ns/op               0 B/op          0 allocs/op
+BenchmarkHas-8           	1000000              1035 ns/op               0 B/op          0 allocs/op
 ```
 
 **Left-Leaning Red-Black (LLRB) implementation of 2-3 balanced binary search trees**
@@ -148,9 +148,10 @@ BenchmarkAddRandGoogle-8 1000000              1505 ns/op              36 B/op   
 ### TODO
 
  - delete
- - has
  - switch from slice on fixed array in index
  - seek()
+ - first()
+ - next()
 
 ## Contact
 

@@ -135,7 +135,24 @@ func BenchmarkKeys(b *testing.B) {
 		set.Put(keys[i])
 	}
 	b.ResetTimer()
-	set.Keys()
+	for _, key := range set.Keys() {
+		_ = key
+	}
+}
+
+func BenchmarkHas(b *testing.B) {
+	keys := randKeysBin(b.N)
+	set := New()
+	for i := 0; i < b.N; i++ {
+		set.Put(keys[i])
+	}
+	b.ResetTimer()
+	for _, key := range keys {
+		h := set.Has(key)
+		if !h {
+			b.Fatal("bad news")
+		}
+	}
 }
 
 func TestDescend(t *testing.T) {

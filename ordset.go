@@ -347,3 +347,38 @@ func (c *Cursor) seek() (key string) {
 
 	return
 }
+
+func (set *OrdSet) has(key string) bool {
+	//fmt.Printf("Add %s %+v\n", key, set)
+	// sort desc
+	i := sort.Search(len(set.idxs), func(n int) bool {
+		return set.idxs[n] <= key
+	})
+	if i < len(set.idxs) && set.idxs[i] == key {
+		// key is present at data[i], nothing to do here
+		return true
+	}
+
+	idx := i / 2
+	p := set.pages[idx]
+	if i == len(set.idxs) {
+		//not found - append to last
+		idx = len(set.pages) - 1
+	}
+	i = sort.Search(p.numItems, func(n int) bool {
+		return p.items[n] <= key
+	})
+	//fmt.Println("page i", i, key, p.items[1] == key)
+	if i < p.numItems && p.items[i] == key {
+		// key is present at data[i], nothing to do here
+		return true
+	}
+	return false
+}
+
+// Has return true if key in set
+func (set *OrdSet) Has(key string) bool {
+	set.Lock()
+	defer set.Unlock()
+	return set.has(key)
+}

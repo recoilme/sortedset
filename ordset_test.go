@@ -7,7 +7,6 @@ import (
 	"sort"
 	"sync/atomic"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/lotsa"
@@ -16,7 +15,7 @@ import (
 var rnd *rand.Rand
 
 func init() {
-	seed := int64(time.Now().UnixNano())
+	seed := int64(1597343679089175000) //int64(time.Now().UnixNano())
 	fmt.Printf("seed: %d\n", seed)
 	rnd = rand.New(rand.NewSource(seed))
 }

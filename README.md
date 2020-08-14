@@ -127,12 +127,12 @@ goos: darwin
 goarch: amd64
 pkg: github.com/recoilme/ordset
 BenchmarkKeys-8          	9279559               111 ns/op              89 B/op          0 allocs/op
-BenchmarkAddAsc-8                2137977               579 ns/op              39 B/op          0 allocs/op
-BenchmarkAddAscBin-8             2223290               614 ns/op              39 B/op          0 allocs/op
-BenchmarkAddDesc-8               2933490               510 ns/op              39 B/op          0 allocs/op
-BenchmarkAddDescBin-8            3091611               476 ns/op              40 B/op          0 allocs/op
-BenchmarkAddRand-8               1000000              1010 ns/op              28 B/op          0 allocs/op
-BenchmarkAddRandBin-8            1000000              1008 ns/op              28 B/op          0 allocs/op
+BenchmarkAddAsc-8                3740071               556 ns/op              38 B/op          0 allocs/op
+BenchmarkAddAscBin-8             2247518               511 ns/op              38 B/op          0 allocs/op
+BenchmarkAddDesc-8               3193227               546 ns/op              38 B/op          0 allocs/op
+BenchmarkAddDescBin-8            3427528               532 ns/op              38 B/op          0 allocs/op
+BenchmarkAddRand-8               1000000              1055 ns/op              27 B/op          0 allocs/op
+BenchmarkAddRandBin-8            1000000              1037 ns/op              27 B/op          0 allocs/op
 BenchmarkParallel-8              1235898              1026 ns/op              29 B/op          0 allocs/op
 BenchmarkHas-8           	 1000000              1035 ns/op               0 B/op          0 allocs/op
 ```

@@ -23,7 +23,7 @@ func randKeys(N int) (keys []string) {
 }
 
 func ParallelOrdSet() {
-	N := 10_000_000
+	N := 1_000_000
 	set := ordset.New()
 	keys := randKeys(N)
 	bkt := ordset.Bucket(set, "")

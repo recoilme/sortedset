@@ -153,6 +153,88 @@ func BenchmarkHas(b *testing.B) {
 	}
 }
 
+func BenchmarkSearchBin(b *testing.B) {
+	keys := randKeysBin(b.N)
+	keysSorted := make([]string, b.N)
+	set := New()
+	for i := 0; i < b.N; i++ {
+		set.Put(keys[i])
+		keysSorted[i] = keys[i]
+	}
+	sort.Sort(sort.Reverse(sort.StringSlice(keysSorted)))
+	b.ResetTimer()
+	for _, key := range set.Keys() {
+		sort.Search(b.N, func(n int) bool {
+			return keysSorted[n] <= key
+		})
+	}
+}
+
+func BenchmarkSearchNewBin(b *testing.B) {
+	keys := randKeysBin(b.N)
+	keysSorted := make([]string, b.N)
+	set := New()
+	for i := 0; i < b.N; i++ {
+		set.Put(keys[i])
+		keysSorted[i] = keys[i]
+	}
+	sort.Sort(sort.Reverse(sort.StringSlice(keysSorted)))
+	b.ResetTimer()
+	for _, key := range set.Keys() {
+		SearchBinary(0, b.N, func(n int) bool {
+			return keysSorted[n] <= key
+		})
+	}
+}
+
+func TestSearchBin(t *testing.T) {
+	N := 10000
+	keys := randKeysBin(N)
+	keysSorted := make([]string, N)
+	for i := 0; i < N; i++ {
+		keysSorted[i] = keys[i]
+	}
+	sort.Sort(sort.Reverse(sort.StringSlice(keysSorted)))
+	find := keys[N/2]
+	i := SearchBinary(0, N, func(n int) bool {
+		return keysSorted[n] <= find
+	})
+	fmt.Println("ind", i)
+	assert.Equal(t, find, keysSorted[i])
+}
+
+func SearchBinary(i, j int, f func(int) bool) int {
+	// Define f(-1) == false and f(n) == true.
+	// Invariant: f(i-1) == false, f(j) == true.
+	//bound := 1
+	//for bound < j && f(j-1) {
+	//	bound *= 2
+	//}
+	nh := i
+	if j > 10000 {
+		if i < j {
+			h := i
+			for h < j && !f(h) {
+				nh = h
+				h = int(uint(h+j) >> 1)
+			}
+		}
+		//fmt.Println("new h", nh)
+		i = nh
+	}
+	for i < j {
+		h := int(uint(i+j) >> 1) // avoid overflow when computing h
+		// i ≤ h < j
+		if !f(h) {
+			i = h + 1 // preserves f(i-1) == false
+		} else {
+			j = h // preserves f(j) == true
+		}
+	}
+	// i == j, f(i-1) == false, and f(j) (= f(i)) == true  =>  answer is i.
+	return i
+}
+
 func TestDescend(t *testing.T) {
 	set := New()
 	var all []string
@@ -344,10 +426,32 @@ func TestCursor(t *testing.T) {
 	c := bkt.Cursor()
 	assert.Equal(t, "6", c.Last())
 	//descend
-	/*
-		for k := c.Last(); k != ""; k = c.Prev() {
-			_ = k
-			fmt.Printf("[%s] ", k)
-			set.Delete(k)
-		}*/
+
+	for k := c.Last(); k != ""; k = c.Prev() {
+		_ = k
+		fmt.Printf("[%s] ", k)
+		//set.Delete(k)
+	}
+}
+
+func TestDelete(t *testing.T) {
+	set := New()
+	keys := randKeys(7)
+	bkt := Bucket(set, "")
+	for _, key := range keys {
+		bkt.Put(key)
+	}
+	c := bkt.Cursor()
+	assert.Equal(t, "6", c.Last())
+	//descend
+	set.Delete("0")
+	set.Delete("1")
+	set.Delete("4")
+	set.Delete("6")
+	assert.Equal(t, "5", c.Last())
+	set.Delete("5")
+	set.Delete("2")
+	assert.Equal(t, "3", c.Last())
+	set.Delete("3")
+	assert.Equal(t, "", c.Last())
 }

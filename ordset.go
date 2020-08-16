@@ -424,6 +424,8 @@ func (set *OrdSet) delete(key string) bool {
 			if i == 0 {
 				//delete set.pages[idx]
 				fmt.Println("delete set.pages[idx]")
+				set.pages[idx].max = ""
+				set.pages[idx].min = ""
 			} else {
 				//last elem
 				set.pages[idx].min = set.pages[idx].items[i-1]
@@ -434,7 +436,7 @@ func (set *OrdSet) delete(key string) bool {
 			set.pages[idx].max = set.pages[idx].items[i]
 		}
 		set.pages[idx].numItems--
-		fmt.Printf("\n%s %+v\n", key, set.pages[idx])
+		//fmt.Printf("\n%s %+v\n", key, set.pages[idx])
 		return true
 	}
 	return false

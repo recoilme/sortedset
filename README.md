@@ -26,7 +26,7 @@ Set usualy based on Trees. Trees are:
 
 ## Architecture
 
-`ordset` based on custom data structure. Data stored ih fixed size arrays, pages: ```[256]string``` and string slice with pages indexes (max/min). Then you put key, `ordset` will store data in descending order with binary comparator.
+`ordset` based on custom data structure. Data stored ih fixed size arrays, pages: ```[256]string``` with pages indexes (max/min). Then you put key, `ordset` will store data in descending order with binary comparator.
 
 If pageSize = 4, and insert ```"1","3","5","7","9"``` -  data will look's like:
 
@@ -88,17 +88,29 @@ Buckets are keys with same prefix. Methods of buckets are **safe** for concurren
 `ordset` stores its keys in byte-sorted descending order. This makes sequential iteration over these keys extremely fast. To iterate over keys we'll use a `Cursor`:
 
 ```go
-	set := New()
-	keys := randKeys(7)
-	bkt := Bucket(set, "")
-	for _, key := range keys {
-		bkt.Put(key)
-	}
-	c := bkt.Cursor()
+	fmt.Println("Cursor")
+	set := ordset.New()
+	users := ordset.Bucket(set, "user")
+	users.Put("rob")
+	users.Put("bob")
+	users.Put("pike")
+	users.Put("alice")
+	users.Put("anna")
+	items := ordset.Bucket(set, "item")
+	items.Put("003")
+	c := users.Cursor()
 	for k := c.Last(); k != ""; k = c.Prev() {
 		fmt.Printf("[%s] ", k)
 	}
-	//[6] [5] [4] [3] [2] [1] [0]
+	fmt.Println()
+	//[rob] [pike] [bob] [anna] [alice]
+
+	c = items.Cursor()
+	for k := c.Last(); k != ""; k = c.Prev() {
+		fmt.Printf("[%s] ", k)
+	}
+	fmt.Println()
+	//[003]
 ```
 
 The cursor allows you to move to a specific point in the list of keys and move forward or backward through the keys one at a time.
@@ -118,7 +130,9 @@ Cursor is method of bucket and safe for concurrent usage. Data in cursor ara con
 
 **BenchmarkParallel:**
 ```
-Put: 10,000 ops over 8 threads in 5ms, 2,094,220/sec, 477 ns/op, 274.9 KB, 28 bytes/op
+Put: 
+  100,000 ops over 8 threads in 49ms, 2,059,360/sec, 485 ns/op, 2.5 MB, 25 bytes/op
+1,000,000 ops over 8 threads in 1041ms, 960,693/sec, 1040 ns/op, 26.4 MB, 27 bytes/op
 ```
 
 **BenchmarkSequental:**
@@ -126,14 +140,14 @@ Put: 10,000 ops over 8 threads in 5ms, 2,094,220/sec, 477 ns/op, 274.9 KB, 28 by
 goos: darwin
 goarch: amd64
 pkg: github.com/recoilme/ordset
-BenchmarkKeys-8          	9279559               111 ns/op              89 B/op          0 allocs/op
-BenchmarkAddAsc-8                3740071               556 ns/op              38 B/op          0 allocs/op
-BenchmarkAddAscBin-8             2247518               511 ns/op              38 B/op          0 allocs/op
-BenchmarkAddDesc-8               3193227               546 ns/op              38 B/op          0 allocs/op
-BenchmarkAddDescBin-8            3427528               532 ns/op              38 B/op          0 allocs/op
-BenchmarkAddRand-8               1000000              1055 ns/op              27 B/op          0 allocs/op
-BenchmarkAddRandBin-8            1000000              1037 ns/op              27 B/op          0 allocs/op
-BenchmarkParallel-8              1235898              1026 ns/op              29 B/op          0 allocs/op
+BenchmarkKeys-8                18761932                87.6 ns/op            86 B/op          0 allocs/op
+BenchmarkAddAsc-8                3533504               388 ns/op              38 B/op          0 allocs/op
+BenchmarkAddAscBin-8             2423774               521 ns/op              38 B/op          0 allocs/op
+BenchmarkAddDesc-8               3155502               371 ns/op              38 B/op          0 allocs/op
+BenchmarkAddDescBin-8            3435102               524 ns/op              38 B/op          0 allocs/op
+BenchmarkAddRand-8               1000000              1051 ns/op              27 B/op          0 allocs/op
+BenchmarkAddRandBin-8            1000000              1033 ns/op              27 B/op          0 allocs/op
+BenchmarkParallel-8              1000000              1018 ns/op              27 B/op          0 allocs/op
 BenchmarkHas-8           	 1000000              1035 ns/op               0 B/op          0 allocs/op
 ```
 
@@ -148,10 +162,10 @@ BenchmarkAddRandGoogle-8 1000000              1505 ns/op              36 B/op   
 ### TODO
 
  - delete
- - switch from slice on fixed array in index
  - seek()
  - first()
  - next()
+ - modify prev() on Put/Delete
 
 ## Contact
 

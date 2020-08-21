@@ -1,23 +1,23 @@
 package main
 
-import (
-	"github.com/recoilme/ordset"
-	"golang.org/x/exp/errors/fmt"
-)
-
 func main() {
 	unsafe()
-	safe()
-	cursor()
+	//safe()
+	//cursor()
 }
 
 func unsafe() {
-	set := ordset.New()
-	set.Put("a")
-	set.Put("b")
-	fmt.Println(set.Keys())
-	//[b a]
+	/*
+		set := ordset.New()
+
+		set.Put("a")
+		set.Put("b")
+		fmt.Println(set.Keys())
+		//[b a]
+	*/
 }
+
+/*
 
 func safe() {
 
@@ -62,3 +62,4 @@ func cursor() {
 	//[003]
 
 }
+*/

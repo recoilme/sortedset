@@ -2,18 +2,17 @@
 package ordset
 
 import (
-	"fmt"
+	"bytes"
 	"sort"
-	"strings"
 	"sync"
 )
 
 const pageSize = 256
 
 type page struct {
-	items    [pageSize]string
-	min      string
-	max      string
+	items    [pageSize][]byte
+	min      []byte
+	max      []byte
 	numItems int
 }
 
@@ -45,20 +44,18 @@ func New(intParams ...int) *OrdSet {
 	p := &page{}
 	set := &OrdSet{}
 	set.pages = make([]*page, 0, capacity)
-	//set.idxs = make([]string, 0, capacity*2)
 	set.pages = append(set.pages, p)
-	//set.idxs = append(set.idxs, "", "")
 	return set
 }
 
 // Put will add key in set, if not present
-func (set *OrdSet) Put(key string) {
+func (set *OrdSet) Put(key []byte) {
 	set.Lock()
 	defer set.Unlock()
 	set.put(key)
 }
 
-func (set *OrdSet) idxPage(key string, byPrefix bool) int {
+func (set *OrdSet) idxPage(key []byte, byPrefix bool) int {
 	//fmt.Printf("Add %s %+v\n", key, set)
 	N := len(set.pages) * 2
 	// sort desc
@@ -68,21 +65,21 @@ func (set *OrdSet) idxPage(key string, byPrefix bool) int {
 
 			if byPrefix {
 				if len(set.pages[n/2].max) > len(key) {
-					return set.pages[n/2].max[:len(key)] <= key
+					return bytes.Compare(set.pages[n/2].max[:len(key)], key) <= 0 //set.pages[n/2].max[:len(key)] <= key
 				}
-				return set.pages[n/2].max <= key
+				return bytes.Compare(set.pages[n/2].max, key) <= 0 //set.pages[n/2].max <= key
 			}
-			return set.pages[n/2].max <= key
+			return bytes.Compare(set.pages[n/2].max, key) <= 0 //set.pages[n/2].max <= key
 		}
 		//even
 
 		if byPrefix {
 			if len(set.pages[n/2].min) > len(key) {
-				return set.pages[n/2].min[:len(key)] <= key
+				return bytes.Compare(set.pages[n/2].min[:len(key)], key) <= 0 //set.pages[n/2].min[:len(key)] <= key
 			}
-			return set.pages[n/2].min <= key
+			return bytes.Compare(set.pages[n/2].min, key) <= 0 //set.pages[n/2].min <= key
 		}
-		return set.pages[n/2].min <= key
+		return bytes.Compare(set.pages[n/2].min, key) <= 0 //set.pages[n/2].min <= key
 		//return set.idxs[n] <= key
 	})
 	/*
@@ -100,7 +97,7 @@ func (set *OrdSet) idxPage(key string, byPrefix bool) int {
 }
 
 // Put will add key in set, if not present
-func (set *OrdSet) put(key string) {
+func (set *OrdSet) put(key []byte) {
 	idx := set.idxPage(key, false)
 	if set.pages[idx].numItems == pageSize-1 {
 		set.split(idx)
@@ -110,20 +107,20 @@ func (set *OrdSet) put(key string) {
 	set.pages[idx].add(key)
 }
 
-func (p *page) idxItem(key string) int {
+func (p *page) idxItem(key []byte) int {
 	//fmt.Println("add", key)
 	i := sort.Search(p.numItems, func(n int) bool {
-		return p.items[n] <= key
+		return bytes.Compare(p.items[n], key) <= 0
 	})
 	return i
 }
 
-func (p *page) add(key string) *page {
+func (p *page) add(key []byte) *page {
 	i := sort.Search(p.numItems, func(n int) bool {
-		return p.items[n] <= key
+		return bytes.Compare(p.items[n], key) <= 0
 	})
 	//fmt.Println("page i", i, key, p.items[1] == key)
-	if i < p.numItems && p.items[i] == key {
+	if i < p.numItems && bytes.Compare(p.items[i], key) == 0 {
 		// key is present at data[i], nothing to do here
 		return p
 	}
@@ -168,7 +165,7 @@ func (set *OrdSet) split(idx int) {
 	p.max = p.items[0]
 	p.min = p.items[mid-1] //[126]
 	for i := mid; i < pageSize; i++ {
-		p.items[i] = ""
+		p.items[i] = nil
 	}
 	//grow pages
 	set.pages = append(set.pages, nil)
@@ -189,6 +186,7 @@ func (set *OrdSet) split(idx int) {
 	*/
 }
 
+/*
 // Keys return all keys
 func (set *OrdSet) Keys() (result []string) {
 	set.RLock()
@@ -211,7 +209,7 @@ func (set *OrdSet) print() (result []string) {
 
 	return result
 }
-
+*/
 // https://github.com/thejerf/gomempool/blob/master/pool.go#L519
 // http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
 // suitably modified to work on 32-bit
@@ -227,6 +225,7 @@ func nextPowerOf2(v uint32) uint32 {
 	return v
 }
 
+/*
 func Bucket(set *OrdSet, name string) *SyncBucket {
 	return &SyncBucket{Name: name, Set: set}
 }
@@ -263,23 +262,7 @@ func (bkt *SyncBucket) last() (result string, idxPage, idxItem int) {
 
 	set := bkt.Set
 	key := bkt.Name
-	/*
-		i := sort.Search(len(set.idxs), func(n int) bool {
-			if len(set.idxs[n]) > len(key) {
-				return set.idxs[n][:len(key)] <= key
-			}
-			return set.idxs[n] <= key
-		})
-		if i < len(set.idxs) && set.idxs[i] == key {
-			// key is present at data[i], nothing to do here
-			idxPage = i / 2
-		} else {
-			idxPage = i / 2
-			if i == len(set.idxs) {
-				//not found - append to last
-				idxPage = len(set.pages) - 1
-			}
-		}*/
+
 	idxPage = set.idxPage(key, true)
 	//Page
 	p := set.pages[idxPage]
@@ -371,20 +354,7 @@ func (c *Cursor) seek() (key string) {
 func (set *OrdSet) has(key string) bool {
 	//fmt.Printf("Add %s %+v\n", key, set)
 	// sort desc
-	/*
-		i := sort.Search(len(set.idxs), func(n int) bool {
-			return set.idxs[n] <= key
-		})
-		if i < len(set.idxs) && set.idxs[i] == key {
-			// key is present at data[i], nothing to do here
-			return true
-		}
 
-		idx := i / 2
-		if i == len(set.idxs) {
-			//not found - append to last
-			idx = len(set.pages) - 1
-		}*/
 	idx := set.idxPage(key, false)
 	p := set.pages[idx]
 
@@ -447,3 +417,4 @@ func (set *OrdSet) Delete(key string) bool {
 	defer set.Unlock()
 	return set.delete(key)
 }
+*/

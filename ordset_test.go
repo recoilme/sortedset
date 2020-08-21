@@ -3,13 +3,7 @@ package ordset
 import (
 	"fmt"
 	"math/rand"
-	"runtime"
-	"sort"
-	"sync/atomic"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/tidwall/lotsa"
 )
 
 var rnd *rand.Rand
@@ -20,7 +14,7 @@ func init() {
 	rnd = rand.New(rand.NewSource(seed))
 }
 
-func randKeysBin(N int) (keys []string) {
+func randKeysBin(N int) (keys [][]byte) {
 	n := 8
 	for i := 0; i < N; i++ {
 		s := make([]byte, n)
@@ -28,11 +22,12 @@ func randKeysBin(N int) (keys []string) {
 		for i := 0; i < n; i++ {
 			s[i] = 'a' + (s[i] % 26)
 		}
-		keys = append(keys, string(s))
+		keys = append(keys, (s))
 	}
 	return
 }
 
+/*
 func randKeys(N int) (keys []string) {
 	format := fmt.Sprintf("%%0%dd", len(fmt.Sprintf("%d", N-1)))
 	for _, i := range rand.Perm(N) {
@@ -53,6 +48,7 @@ func stringsEquals(a, b []string) (int, bool) {
 	return 0, true
 }
 
+
 //go test -benchmem -bench Add
 
 func BenchmarkAddAsc(b *testing.B) {
@@ -64,6 +60,8 @@ func BenchmarkAddAsc(b *testing.B) {
 		set.Put(keys[i])
 	}
 }
+
+
 
 func BenchmarkAddAscBin(b *testing.B) {
 	keys := randKeysBin(b.N)
@@ -102,7 +100,7 @@ func BenchmarkAddRand(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		set.Put(keys[i])
 	}
-}
+}*/
 
 func BenchmarkAddRandBin(b *testing.B) {
 	keys := randKeysBin(b.N)
@@ -113,6 +111,7 @@ func BenchmarkAddRandBin(b *testing.B) {
 	}
 }
 
+/*
 func BenchmarkParallel(b *testing.B) {
 	set := New()
 	keys := randKeysBin(b.N)
@@ -455,3 +454,13 @@ func TestDelete(t *testing.T) {
 	set.Delete("3")
 	assert.Equal(t, "", c.Last())
 }
+*/
+/*
+BenchmarkAddAsc-8                3545025               574 ns/op              38 B/op          0 allocs/op
+BenchmarkAddAscBin-8             2262948               563 ns/op              38 B/op          0 allocs/op
+BenchmarkAddDesc-8               3241903               484 ns/op              38 B/op          0 allocs/op
+BenchmarkAddDescBin-8            2993749               473 ns/op              38 B/op          0 allocs/op
+BenchmarkAddRand-8               1000000              1081 ns/op              27 B/op          0 allocs/op
+BenchmarkAddRandBin-8            1000000              1052 ns/op              27 B/op          0 allocs/op
+BenchmarkParallel-8              1000000              1034 ns/op              27 B/op          0 allocs/op
+*/

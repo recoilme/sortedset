@@ -1,16 +1,21 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"math/rand"
 	"os"
 	"runtime"
 
+	"github.com/google/btree"
 	"github.com/recoilme/ordset"
 	"github.com/tidwall/lotsa"
 )
 
 func main() {
+
+	OneThreadOrdSet()
+	OneThreadGoogle()
 	ParallelOrdSet()
 }
 
@@ -22,46 +27,49 @@ func randKeys(N int) (keys []string) {
 	return
 }
 
-func ParallelOrdSet() {
-	N := 1_000_000
+func OneThreadOrdSet() {
+	fmt.Println("OneThreadOrdSet")
+	N := 10_000_000
 	set := ordset.New()
 	keys := randKeys(N)
 	bkt := ordset.Bucket(set, "")
 	lotsa.Output = os.Stdout
 	lotsa.MemUsage = true
-	lotsa.Ops(N, runtime.NumCPU(), func(i, _ int) {
+	lotsa.Ops(N, 1, func(i, _ int) {
 		bkt.Put(keys[i])
 	})
-
 }
 
-/*
-type googleKind struct {
-	key string
-}
-
-func (a *googleKind) Less(b btree.Item) bool {
-	return a.key < b.(*googleKind).key
-}
-func ParallelGoogle() {
-	N := 10_000
-	fmt.Println()
-	type gtree struct {
-		sync.RWMutex
-		gt *btree.BTree
-	}
-	gt := &gtree{gt: btree.New(32)}
-	//tr := btree.New(32)
+func ParallelOrdSet() {
+	fmt.Println("ParallelOrdSet")
+	N := 10_000_000
+	set := ordset.New()
 	keys := randKeys(N)
-	gkeys := make([]*googleKind, len(keys))
-
 	lotsa.Output = os.Stdout
 	lotsa.MemUsage = true
 	lotsa.Ops(N, runtime.NumCPU(), func(i, _ int) {
-		gt.Lock()
-		gt.gt.ReplaceOrInsert(gkeys[i])
-		gt.Unlock()
+		set.Put(keys[i])
 	})
-
 }
-*/
+
+// Str implements the Item interface for strings.
+type Str string
+
+// Less returns true if a < b.
+func (a Str) Less(b btree.Item) bool {
+	return a < b.(Str)
+}
+
+var btreeDegree = flag.Int("degree", 32, "B-Tree degree")
+
+func OneThreadGoogle() {
+	fmt.Println("OneThreadGoogle")
+	N := 10_000_000
+	keys := randKeys(N)
+	tr := btree.New(*btreeDegree)
+	lotsa.Output = os.Stdout
+	lotsa.MemUsage = true
+	lotsa.Ops(N, 1, func(i, _ int) {
+		tr.ReplaceOrInsert(Str(keys[i]))
+	})
+}

@@ -1,4 +1,4 @@
-// Package ordset provide ordered set, with strings comparator, backed by arrays
+// Package ordset provide sorted set, with strings comparator, backed by arrays
 package ordset
 
 import (
@@ -23,15 +23,17 @@ type OrdSet struct {
 	pages []*page
 }
 
-type SyncBucket struct {
+// BucketStore store for buckets
+type BucketStore struct {
 	Name    string
 	Set     *OrdSet
 	idxPage int
 	idxItem int
 }
 
+// Cursor struct
 type Cursor struct {
-	bucket *SyncBucket
+	bucket *BucketStore
 }
 
 // New create ordered set with capacity (first param),
@@ -173,7 +175,7 @@ func (set *OrdSet) split(idx int) {
 	*/
 }
 
-// Keys return all keys
+// Keys return all keys in descending order
 func (set *OrdSet) Keys() (result []string) {
 	set.RLock()
 	defer set.RUnlock()
@@ -211,17 +213,20 @@ func nextPowerOf2(v uint32) uint32 {
 	return v
 }
 
-func Bucket(set *OrdSet, name string) *SyncBucket {
-	return &SyncBucket{Name: name, Set: set}
+// Bucket is a keys with same prefix
+func Bucket(set *OrdSet, name string) *BucketStore {
+	return &BucketStore{Name: name, Set: set}
 }
 
 // Put add prefix to key
-func (bkt *SyncBucket) Put(key string) {
+func (bkt *BucketStore) Put(key string) {
 	bkt.Set.Put(bkt.Name + key)
 }
 
-// Keys return all keys
-func (bkt *SyncBucket) Keys() (result []string) {
+// Keys return all keys from bucket, with limit offset
+// if limit <= 0 - no limit
+// if offset <= 0 - no offset
+func (bkt *BucketStore) Keys(limit, offset int) (result []string) {
 	bkt.Set.RLock()
 	defer bkt.Set.RUnlock()
 	lenName := len(bkt.Name)
@@ -238,7 +243,17 @@ func (bkt *SyncBucket) Keys() (result []string) {
 		for j := idxItem; j < bkt.Set.pages[i].numItems; j++ { //, key := range p.items[i] {
 			key := bkt.Set.pages[i].items[j]
 			if strings.HasPrefix(key, bkt.Name) {
-				result = append(result, key[lenName:])
+				if offset <= 0 {
+					if limit > 0 && len(result) == limit {
+						stop = true
+						break
+					}
+					result = append(result, key[lenName:])
+				} else {
+					if offset >= 0 {
+						offset--
+					}
+				}
 			} else {
 				stop = true
 				break
@@ -250,7 +265,7 @@ func (bkt *SyncBucket) Keys() (result []string) {
 }
 
 // Last find last key with bucket prefix
-func (bkt *SyncBucket) last() (result string, idxPage, idxItem int) {
+func (bkt *BucketStore) last() (result string, idxPage, idxItem int) {
 	bkt.Set.RLock()
 	defer bkt.Set.RUnlock()
 
@@ -286,7 +301,7 @@ func (bkt *SyncBucket) last() (result string, idxPage, idxItem int) {
 }
 
 // Cursor creates a cursor associated with the bucket.
-func (bkt *SyncBucket) Cursor() *Cursor {
+func (bkt *BucketStore) Cursor() *Cursor {
 	// Allocate and return a cursor.
 	return &Cursor{
 		bucket: bkt,
@@ -306,7 +321,7 @@ func (c *Cursor) Last() (key string) {
 }
 
 // Prev moves the cursor to the previous item and returns its key.
-func (bkt *SyncBucket) Prev() (key string) {
+func (bkt *BucketStore) Prev() (key string) {
 	bkt.Set.RLock()
 	defer bkt.Set.RUnlock()
 

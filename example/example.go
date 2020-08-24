@@ -27,12 +27,12 @@ func safe() {
 	users.Put("bob")
 	users.Put("pike")
 	users.Put("alice")
-	fmt.Println(users.Keys())
+	fmt.Println(users.Keys(0, 0))
 	// output: [rob pike bob alice]
 	items := ordset.Bucket(set, "item")
 	items.Put("003")
 	items.Put("042")
-	fmt.Println(items.Keys())
+	fmt.Println(items.Keys(0, 0))
 	// output: [042 003]
 }
 

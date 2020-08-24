@@ -375,7 +375,7 @@ func TestParallel(t *testing.T) {
 		bkt.Put(keys[i])
 	})
 	sort.Sort(sort.Reverse(sort.StringSlice(keys)))
-	assert.Equal(t, keys, bkt.Keys())
+	assert.Equal(t, keys, bkt.Keys(0, 0))
 }
 
 func TestBucket(t *testing.T) {
@@ -396,10 +396,20 @@ func TestBucket(t *testing.T) {
 		items.Put(key)
 	}
 	items.Put("003")
-	set.Put("item") //"itemitem"
+	set.Put("item") //"item", empty
 
 	assert.Equal(t, "rob", users.Cursor().Last())
 	assert.Equal(t, "259", items.Cursor().Last())
+
+	//fmt.Println(users.Keys())
+	assert.Equal(t, 6, len(users.Keys(0, 0)))
+	//it := items.Keys()
+	//fmt.Println("'", it[len(it)-1], "'")
+	assert.Equal(t, 261, len(items.Keys(0, 0))) //+ empty item
+
+	assert.Equal(t, []string{"259"}, items.Keys(1, 0))
+	assert.Equal(t, []string{"249"}, items.Keys(1, 10))
+	assert.Equal(t, []string{"249", "248"}, items.Keys(2, 10))
 
 	c := users.Cursor()
 	var first string

@@ -2,7 +2,7 @@
 
 [![GoDoc](https://godoc.org/github.com/recoilme/ordset?status.svg)](https://godoc.org/github.com/recoilme/ordset)
 
-Package ordset provide ordered set, with strings/binary comparator, backed by arrays
+Package ordset provide sorted set, with strings/binary comparator, backed by arrays
 
 ## Status
 
@@ -18,15 +18,16 @@ go get github.com/recoilme/ordset
 
 ## Motivation
 
-Set usualy based on Trees. Trees are:
+Set's usualy based on Trees. Trees is:
 
-- use pointers => many allocations
-- use pointers => memory fragmentation
+- based on pointers => many allocations
+- based on pointers => memory fragmentation
 - rebalansed on the fly => perfomance degradation, or not safe for traversting
+- degradation with grow
 
 ## Architecture
 
-`ordset` based on custom data structure. Data stored ih fixed size arrays, pages: ```[256]string``` with pages indexes (max/min). Then you put key, `ordset` will store data in descending order with binary comparator.
+`ordset` is based on custom data structure. Data stored ih fixed size arrays, pages: ```[256]string``` with pages indexes (max/min). Then you put key, `ordset` will store data in descending order with binary comparator.
 
 If pageSize = 4, and insert ```"1","3","5","7","9"``` -  data will look's like:
 
@@ -73,13 +74,13 @@ Buckets are keys with same prefix. Methods of buckets are **safe** for concurren
 	users.Put("bob")
 	users.Put("pike")
 	users.Put("alice")
-	fmt.Println(users.Keys())
+	fmt.Println(users.Keys(0,0))
 	// output: [rob pike bob alice]
     
 	items := ordset.Bucket(set, "item")
 	items.Put("003")
 	items.Put("042")
-	fmt.Println(items.Keys())
+	fmt.Println(items.Keys(0,0))
 	// output: [042 003]
 ```
 
@@ -113,7 +114,7 @@ Buckets are keys with same prefix. Methods of buckets are **safe** for concurren
 	//[003]
 ```
 
-The cursor allows you to move to a specific point in the list of keys and move forward or backward through the keys one at a time.
+The cursor allows you to move to a specific point in the list of keys and move backward through the keys one at a time.
 
 The following functions are available on the cursor:
 
@@ -124,7 +125,7 @@ Prev()   Move to the previous key.
 
 You must seek to a position using Last() before calling Prev(). If you do not seek to a position then these functions will return a empty key.
 
-Cursor is method of bucket and safe for concurrent usage. Data in cursor ara consistent.
+Cursor is method of bucket and safe for concurrent usage. Data in cursor are must no panic but if underlaing array is modified, result will be unexpected.
 
 ### Benchmark
 
@@ -152,20 +153,22 @@ BenchmarkHas-8           	 1000000              1035 ns/op               0 B/op 
 ```
 
 **Left-Leaning Red-Black (LLRB) implementation of 2-3 balanced binary search trees**
-(github.com/google/btree)
+[github.com/google/btree](github.com/google/btree)
 
-Sequental:
 ```
-BenchmarkAddRandGoogle-8 1000000              1505 ns/op              36 B/op          0 allocs/op
+OneThreadOrdSet
+10,000,000 ops in 22245ms, 449,547/sec, 2224 ns/op, 273.2 MB, 28 bytes/op
+OneThreadGoogle
+10,000,000 ops in 29001ms, 344,814/sec, 2900 ns/op, 431.2 MB, 45 bytes/op
+ParallelOrdSet
+10,000,000 ops over 8 threads in 21492ms, 465,289/sec, 2149 ns/op, 266.1 MB, 27 bytes/op
 ```
 
 ### TODO
 
- - delete
  - seek()
  - first()
  - next()
- - modify prev() on Put/Delete
 
 ## Contact
 

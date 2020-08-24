@@ -1,19 +1,19 @@
-# `ordset`
+# `sortedset`
 
-[![GoDoc](https://godoc.org/github.com/recoilme/ordset?status.svg)](https://godoc.org/github.com/recoilme/ordset)
+[![GoDoc](https://godoc.org/github.com/recoilme/sortedset?status.svg)](https://godoc.org/github.com/recoilme/sortedset)
 
-Package ordset provide sorted set, with strings/binary comparator, backed by arrays
+Package sortedset provide sorted set, with strings/binary comparator, backed by arrays
 
 ## Status
 
-WIP
+Code review
 
 ## Usage
 
 install Go and run ```go get```:
 
 ```go
-go get github.com/recoilme/ordset
+go get github.com/recoilme/sortedset
 ```
 
 ## Motivation
@@ -27,7 +27,7 @@ Set's usualy based on Trees. Trees is:
 
 ## Architecture
 
-`ordset` is based on custom data structure. Data stored ih fixed size arrays, pages: ```[256]string``` with pages indexes (max/min). Then you put key, `ordset` will store data in descending order with binary comparator.
+`sortedset` is based on custom data structure. Data stored ih fixed size arrays, pages: ```[256]string``` with pages indexes (max/min). Then you put key, `sortedset` will store data in descending order with binary comparator.
 
 If pageSize = 4, and insert ```"1","3","5","7","9"``` -  data will look's like:
 
@@ -56,7 +56,7 @@ That's all.
 Put is **safe** for use from multiple goroutines.
 
 ```go
-	set := ordset.New()
+	set := sortedset.New()
 	set.Put("a")
 	set.Put("b")
 	fmt.Println(set.Keys())
@@ -68,8 +68,8 @@ Put is **safe** for use from multiple goroutines.
 Buckets are keys with same prefix. Methods of buckets are **safe** for concurrent usage.
 
 ```go
-	set := ordset.New()
-	users := ordset.Bucket(set, "user")//Bucket name may be ommited
+	set := sortedset.New()
+	users := sortedset.Bucket(set, "user")//Bucket name may be ommited
 	users.Put("rob")
 	users.Put("bob")
 	users.Put("pike")
@@ -77,7 +77,7 @@ Buckets are keys with same prefix. Methods of buckets are **safe** for concurren
 	fmt.Println(users.Keys(0,0))
 	// output: [rob pike bob alice]
     
-	items := ordset.Bucket(set, "item")
+	items := sortedset.Bucket(set, "item")
 	items.Put("003")
 	items.Put("042")
 	fmt.Println(items.Keys(0,0))
@@ -86,18 +86,18 @@ Buckets are keys with same prefix. Methods of buckets are **safe** for concurren
 
 ### Iterating over keys
 
-`ordset` stores its keys in byte-sorted descending order. This makes sequential iteration over these keys extremely fast. To iterate over keys we'll use a `Cursor`:
+`sortedset` stores its keys in byte-sorted descending order. This makes sequential iteration over these keys extremely fast. To iterate over keys we'll use a `Cursor`:
 
 ```go
 	fmt.Println("Cursor")
-	set := ordset.New()
-	users := ordset.Bucket(set, "user")
+	set := sortedset.New()
+	users := sortedset.Bucket(set, "user")
 	users.Put("rob")
 	users.Put("bob")
 	users.Put("pike")
 	users.Put("alice")
 	users.Put("anna")
-	items := ordset.Bucket(set, "item")
+	items := sortedset.Bucket(set, "item")
 	items.Put("003")
 	c := users.Cursor()
 	for k := c.Last(); k != ""; k = c.Prev() {
@@ -140,7 +140,7 @@ Put:
 ```
 goos: darwin
 goarch: amd64
-pkg: github.com/recoilme/ordset
+pkg: github.com/recoilme/sortedset
 BenchmarkKeys-8                18761932                87.6 ns/op            86 B/op          0 allocs/op
 BenchmarkAddAsc-8                3533504               388 ns/op              38 B/op          0 allocs/op
 BenchmarkAddAscBin-8             2423774               521 ns/op              38 B/op          0 allocs/op
@@ -176,4 +176,4 @@ Vadim Kulibaba [@recoilme](http://t.me/recoilme)
 
 ## License
 
-`ordset` source code is available under the MIT [License](/LICENSE).
+`sortedset` source code is available under the MIT [License](/LICENSE).

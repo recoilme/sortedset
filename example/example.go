@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/recoilme/ordset"
+	"github.com/recoilme/sortedset"
 	"golang.org/x/exp/errors/fmt"
 )
 
@@ -12,7 +12,7 @@ func main() {
 }
 
 func unsafe() {
-	set := ordset.New()
+	set := sortedset.New()
 	set.Put("a")
 	set.Put("b")
 	fmt.Println(set.Keys())
@@ -21,15 +21,15 @@ func unsafe() {
 
 func safe() {
 
-	set := ordset.New()
-	users := ordset.Bucket(set, "user")
+	set := sortedset.New()
+	users := sortedset.Bucket(set, "user")
 	users.Put("rob")
 	users.Put("bob")
 	users.Put("pike")
 	users.Put("alice")
 	fmt.Println(users.Keys(0, 0))
 	// output: [rob pike bob alice]
-	items := ordset.Bucket(set, "item")
+	items := sortedset.Bucket(set, "item")
 	items.Put("003")
 	items.Put("042")
 	fmt.Println(items.Keys(0, 0))
@@ -38,14 +38,14 @@ func safe() {
 
 func cursor() {
 	fmt.Println("Cursor")
-	set := ordset.New()
-	users := ordset.Bucket(set, "user")
+	set := sortedset.New()
+	users := sortedset.Bucket(set, "user")
 	users.Put("rob")
 	users.Put("bob")
 	users.Put("pike")
 	users.Put("alice")
 	users.Put("anna")
-	items := ordset.Bucket(set, "item")
+	items := sortedset.Bucket(set, "item")
 	items.Put("003")
 	c := users.Cursor()
 	for k := c.Last(); k != ""; k = c.Prev() {

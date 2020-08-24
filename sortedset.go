@@ -1,5 +1,5 @@
-// Package ordset provide sorted set, with strings comparator, backed by arrays
-package ordset
+// Package sortedset provide sorted set, with strings comparator, backed by arrays
+package sortedset
 
 import (
 	"fmt"
@@ -17,8 +17,8 @@ type page struct {
 	numItems int
 }
 
-// OrdSet provide ordered set, with strings comparator
-type OrdSet struct {
+// sortedset provide sorted set, with strings comparator
+type SortedSet struct {
 	sync.RWMutex
 	pages []*page
 }
@@ -26,7 +26,7 @@ type OrdSet struct {
 // BucketStore store for buckets
 type BucketStore struct {
 	Name    string
-	Set     *OrdSet
+	Set     *SortedSet
 	idxPage int
 	idxItem int
 }
@@ -36,28 +36,28 @@ type Cursor struct {
 	bucket *BucketStore
 }
 
-// New create ordered set with capacity (first param),
+// New create sorted set with capacity (first param),
 // default is 1024, must be > 3 and power of 2
-func New(intParams ...int) *OrdSet {
+func New(intParams ...int) *SortedSet {
 	capacity := 1024
 	if len(intParams) > 0 && intParams[0] > 4 {
 		capacity = int(nextPowerOf2(uint32(intParams[0])))
 	}
 	p := &page{}
-	set := &OrdSet{}
+	set := &SortedSet{}
 	set.pages = make([]*page, 0, capacity)
 	set.pages = append(set.pages, p)
 	return set
 }
 
 // Put will add key in set, if not present
-func (set *OrdSet) Put(key string) {
+func (set *SortedSet) Put(key string) {
 	set.Lock()
 	defer set.Unlock()
 	set.put(key)
 }
 
-func (set *OrdSet) idxPage(key string, byPrefix bool) int {
+func (set *SortedSet) idxPage(key string, byPrefix bool) int {
 	//fmt.Printf("Add %s %+v\n", key, set)
 	N := len(set.pages) * 2
 	// sort desc
@@ -92,7 +92,7 @@ func (set *OrdSet) idxPage(key string, byPrefix bool) int {
 }
 
 // Put will add key in set, if not present
-func (set *OrdSet) put(key string) {
+func (set *SortedSet) put(key string) {
 	idx := set.idxPage(key, false)
 	if set.pages[idx].numItems == pageSize-1 {
 		set.split(idx)
@@ -142,7 +142,7 @@ func (p *page) add(key string) *page {
 	return p
 }
 
-func (set *OrdSet) split(idx int) {
+func (set *SortedSet) split(idx int) {
 	//fmt.Printf("set before split:%+v\n", set)
 	//example data: 015 014 013 012 011 010 009 008 007 006 005...
 	p := set.pages[idx]
@@ -176,7 +176,7 @@ func (set *OrdSet) split(idx int) {
 }
 
 // Keys return all keys in descending order
-func (set *OrdSet) Keys() (result []string) {
+func (set *SortedSet) Keys() (result []string) {
 	set.RLock()
 	defer set.RUnlock()
 	for _, p := range set.pages {
@@ -190,7 +190,7 @@ func (set *OrdSet) Keys() (result []string) {
 	return result
 }
 
-func (set *OrdSet) print() (result []string) {
+func (set *SortedSet) print() (result []string) {
 	for i, p := range set.pages {
 		fmt.Printf("i:%d max:%s min:%s\n", i, p.max, p.min)
 	}
@@ -214,7 +214,7 @@ func nextPowerOf2(v uint32) uint32 {
 }
 
 // Bucket is a keys with same prefix
-func Bucket(set *OrdSet, name string) *BucketStore {
+func Bucket(set *SortedSet, name string) *BucketStore {
 	return &BucketStore{Name: name, Set: set}
 }
 
@@ -359,7 +359,7 @@ func (c *Cursor) seek() (key string) {
 	return
 }
 
-func (set *OrdSet) has(key string) bool {
+func (set *SortedSet) has(key string) bool {
 	idx := set.idxPage(key, false)
 	p := set.pages[idx]
 
@@ -375,13 +375,13 @@ func (set *OrdSet) has(key string) bool {
 }
 
 // Has return true if key in set
-func (set *OrdSet) Has(key string) bool {
+func (set *SortedSet) Has(key string) bool {
 	set.Lock()
 	defer set.Unlock()
 	return set.has(key)
 }
 
-func (set *OrdSet) delete(key string) bool {
+func (set *SortedSet) delete(key string) bool {
 	//fmt.Printf("Add %s %+v\n", key, set)
 	// sort desc
 	idx := set.idxPage(key, false)
@@ -398,7 +398,7 @@ func (set *OrdSet) delete(key string) bool {
 		if i == set.pages[idx].numItems-1 {
 			if i == 0 {
 				//delete set.pages[idx]
-				fmt.Println("delete set.pages[idx]")
+				//fmt.Println("delete set.pages[idx]")
 				set.pages[idx].max = ""
 				set.pages[idx].min = ""
 			} else {
@@ -417,7 +417,7 @@ func (set *OrdSet) delete(key string) bool {
 	return false
 }
 
-func (set *OrdSet) Delete(key string) bool {
+func (set *SortedSet) Delete(key string) bool {
 	set.Lock()
 	defer set.Unlock()
 	return set.delete(key)

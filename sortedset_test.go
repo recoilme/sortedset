@@ -1,4 +1,4 @@
-package ordset
+package sortedset
 
 import (
 	"fmt"
@@ -199,7 +199,7 @@ func TestSearchBin(t *testing.T) {
 	i := SearchBinary(0, N, func(n int) bool {
 		return keysSorted[n] <= find
 	})
-	fmt.Println("ind", i)
+	//fmt.Println("ind", i)
 	assert.Equal(t, find, keysSorted[i])
 }
 
@@ -439,7 +439,7 @@ func TestCursor(t *testing.T) {
 
 	for k := c.Last(); k != ""; k = c.Prev() {
 		_ = k
-		fmt.Printf("[%s] ", k)
+		//fmt.Printf("[%s] ", k)
 		//set.Delete(k)
 	}
 }

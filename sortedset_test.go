@@ -465,3 +465,18 @@ func TestDelete(t *testing.T) {
 	set.Delete("3")
 	assert.Equal(t, "", c.Last())
 }
+
+func TestFind(t *testing.T) {
+	arr := [256]string{"9", "8", "6", "4"}
+	keys := []string{"9", "8", "6", "4"}
+	f := func(s string) int {
+		i := sort.Search(len(keys), func(i int) bool {
+			return keys[i] <= s
+		})
+		return i
+	}
+	assert.Equal(t, f("5"), findDesc("5", &arr, 0, 3))
+	assert.Equal(t, f("9"), findDesc("9", &arr, 0, 3))
+	assert.Equal(t, f("99"), findDesc("99", &arr, 0, 3))
+	assert.Equal(t, f("3"), findDesc("3", &arr, 0, 3))
+}

@@ -103,17 +103,21 @@ func (set *SortedSet) put(key string) {
 }
 
 func (p *page) idxItem(key string) int {
-	//fmt.Println("add", key)
-	i := sort.Search(p.numItems, func(n int) bool {
-		return p.items[n] <= key
-	})
-	return i
+	/*
+		i := sort.Search(p.numItems, func(n int) bool {
+			return p.items[n] <= key
+		})
+		return i*/
+	return findDesc(key, &p.items, 0, p.numItems)
 }
 
 func (p *page) add(key string) *page {
-	i := sort.Search(p.numItems, func(n int) bool {
-		return p.items[n] <= key
-	})
+	/*
+		i := sort.Search(p.numItems, func(n int) bool {
+			return p.items[n] <= key
+		})
+	*/
+	i := findDesc(key, &p.items, 0, p.numItems)
 	//fmt.Println("page i", i, key, p.items[1] == key)
 	if i < p.numItems && p.items[i] == key {
 		// key is present at data[i], nothing to do here
@@ -363,9 +367,10 @@ func (set *SortedSet) has(key string) bool {
 	idx := set.idxPage(key, false)
 	p := set.pages[idx]
 
-	i := sort.Search(p.numItems, func(n int) bool {
+	/*i := sort.Search(p.numItems, func(n int) bool {
 		return p.items[n] <= key
-	})
+	})*/
+	i := findDesc(key, &p.items, 0, p.numItems)
 	//fmt.Println("page i", i, key, p.items[1] == key)
 	if i < p.numItems && p.items[i] == key {
 		// key is present at data[i], nothing to do here
@@ -376,8 +381,8 @@ func (set *SortedSet) has(key string) bool {
 
 // Has return true if key in set
 func (set *SortedSet) Has(key string) bool {
-	set.Lock()
-	defer set.Unlock()
+	set.RLock()
+	defer set.RUnlock()
 	return set.has(key)
 }
 
@@ -387,9 +392,11 @@ func (set *SortedSet) delete(key string) bool {
 	idx := set.idxPage(key, false)
 
 	//p := set.pages[idx]
-	i := sort.Search(set.pages[idx].numItems, func(n int) bool {
+	/*i := sort.Search(set.pages[idx].numItems, func(n int) bool {
 		return set.pages[idx].items[n] <= key
-	})
+	})*/
+
+	i := findDesc(key, &set.pages[idx].items, 0, set.pages[idx].numItems)
 	//fmt.Println("page i", i, key, p.items[1] == key)
 	if i < set.pages[idx].numItems && set.pages[idx].items[i] == key {
 		//delete
@@ -417,8 +424,25 @@ func (set *SortedSet) delete(key string) bool {
 	return false
 }
 
+// Delete a key id present
 func (set *SortedSet) Delete(key string) bool {
 	set.Lock()
 	defer set.Unlock()
 	return set.delete(key)
+}
+
+// simple binary search
+func findDesc(key string, arr *[256]string, low, high int) int {
+	for low <= high {
+		mid := int(uint(low+high) >> 1) // avoid overflow when computing h
+		if key <= arr[mid] {
+			low = mid + 1
+		} else {
+			high = mid - 1
+		}
+	}
+	if low > 0 && arr[low-1] == key {
+		return low - 1
+	}
+	return low
 }

@@ -6,12 +6,12 @@ import (
 )
 
 func main() {
-	unsafe()
-	safe()
+	base()
+	buckets()
 	cursor()
 }
 
-func unsafe() {
+func base() {
 	set := sortedset.New()
 	set.Put("a")
 	set.Put("b")
@@ -19,7 +19,7 @@ func unsafe() {
 	//[b a]
 }
 
-func safe() {
+func buckets() {
 
 	set := sortedset.New()
 	users := sortedset.Bucket(set, "user")

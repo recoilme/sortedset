@@ -20,7 +20,6 @@ type page struct {
 // OrdSet provide ordered set, with strings comparator
 type OrdSet struct {
 	sync.RWMutex
-	//idxs  []string
 	pages []*page
 }
 
@@ -45,9 +44,7 @@ func New(intParams ...int) *OrdSet {
 	p := &page{}
 	set := &OrdSet{}
 	set.pages = make([]*page, 0, capacity)
-	//set.idxs = make([]string, 0, capacity*2)
 	set.pages = append(set.pages, p)
-	//set.idxs = append(set.idxs, "", "")
 	return set
 }
 
@@ -83,14 +80,7 @@ func (set *OrdSet) idxPage(key string, byPrefix bool) int {
 			return set.pages[n/2].min <= key
 		}
 		return set.pages[n/2].min <= key
-		//return set.idxs[n] <= key
 	})
-	/*
-		if i < len(set.pages)*2 && set.idxs[i] == key {
-			// key is present at data[i], nothing to do here
-			return
-		}*/
-
 	idx := i / 2
 	if i == N {
 		//not found - append to last
@@ -176,12 +166,6 @@ func (set *OrdSet) split(idx int) {
 	copy(set.pages[idx+1:], set.pages[idx:])
 	set.pages[idx] = p
 	set.pages[idx+1] = pRight
-	//grow idx on 2
-	//set.idxs = append(set.idxs, "", "")
-	//copy(set.idxs[idx*2+3:], set.idxs[idx*2+1:])
-
-	//set.idxs[idx*2+1] = p.min
-	//set.idxs[idx*2+2] = pRight.max
 	/*
 		fmt.Println("data left:", p.items, p.min, p.max, p.numItems)
 		fmt.Println("data right:", pRight.items, pRight.min, pRight.max, pRight.numItems)
@@ -236,22 +220,31 @@ func (bkt *SyncBucket) Put(key string) {
 	bkt.Set.Put(bkt.Name + key)
 }
 
-//1597323014317877000
-//&{items:[userrob userpike userbob useranna useralice user01 itemzxlxibiq itemzwqwagcl itemzubqeabj itemztejlftb itemzoigtdql itemzmbixqpj itemzlzafkqq itemzefhtvej itemzbblspnm itemyscgyhze itemymxptnbi itemycthwabh itemxxpiajhh itemxwmqvlay itemxwmnciuo itemxvhhdwtu itemxvfgxlfe itemxlobjqak itemxhszckaq itemxfmxdowt itemxdvsxydz itemxdbvmmsv itemxcazsohq itemwzydxbug itemwxywyikw itemwwnqpprh itemwqmlaszl itemwmlnsxls itemwjmkcypk itemwielsnjv itemwckthyww itemvpvatlbl itemvogmqzvy itemvnwvcaep itemvlwicokh itemvggkjawz itemvgeprumq itemvfxjlxap itemvfwohngq itemvblmjczj itemuyqzncjk itemuulksexn itemunjqbjdi itemulzbnmzb itemuixczudg itemudrsylfz itemubxerokd itemttppgnlw itemtsggxmih itemtoshfqel itemtlmrjgri itemtjsqynxf itemthpvmwtb itemtggplmvm itemtfhblawi itemteihpnwd itemtcijmude itemtajvccsq itemszbltmfi itemswlvtgrw itemstaqmian itemsrihktjd itemspvuggla itemspopzdet itemspgtokbb itemskytmqkl itemsfatlllk itemseoujhko itemseefcsnu itemsdmrvxve itemsabyckur itemrxsyeglq itemrtpldeog itemrqwymfsf itemroqqegct itemrneuraro itemrlrtkwoh itemrknzubru itemrjqbbuvy itemrilncuqo itemrerxvpyf itemrarpscgl itemqtmtixqn itemqribxxpp itemqqgcldks itemqofipytu itemqmyrnbxv itemqlvcroth itemqfwmgbdw itempwlqsfnn itempslslbnp itemppdkblzt itempnyzsyzd itempnapltiv itemplvyqziy itempkzqkmwd itempjxtyyrh itempiqhahsn itempimkvewn itemphtvsxkz itemphmspsgo itempfaarruq itempefmijla itempecqafzz itemoyymwymc itemoweshgus itemovryokod itemovilxocr itemospiruhr itemopxscsds itemonzqoont itemomjnbdcv itemolbbjiij itemoiackjea itemogasoxmg itemobilbfrl itemoavbkcgy itemnzkcleve itemnwqiricf itemnuvkifap itemnthhjmqp itemnouthzto itemnoizbcsw itemnkpzajds itemnkafkhyg itemnfaenvwa itemndregpaq itemmntsgnje itemmhaogmeh itemmanrliop itemmaijkutz itemlrmevskn itemlretoznv itemlmiporya itemlmimkzgj itemllhhuopr itemljnpkonq itemlixyrbcd itemlfhtyhym itemldbnscay itemlanrjacx itemkwthrpui itemkvjtarff itemkumfrzss itemkrzkkkfi itemkqvgzudj itemkoliqwbs itemkmrgbxta itemkkniepcx itemkeqyimfb itemjvblgazc itemjtlbpftp itemjhavnsrm itemjfesbyzh itemjdcyxtfr itemjbxbydof itemiupbyqeo itemirzkmzpk itemirfroekw itemiqvuszwh itemiqcyszkn iteminnskdgs itemijvbiscv itemiiiketzy itemihocnhsj itemifqszbss itemibclkods itemhxihpszv itemhwedbmqb itemhumycbrn itemhpjvkkgm itemhmgninia itemhkjgqknt itemhibvlriu itemhhwhawsm itemhgrzyemt itemhfdvqarg itemhejdvwik itemhegvmudm itemhcjvabdw itemhbcnnjmv itemgzzzrdae itemgyhnpooc itemgxykqhuw itemgxkvqzbt itemgubqvlts itemgrudpotl itemgnaiwfcj itemgmstuefj itemgmbgwevc itemgjwhdivt itemgixdsrox itemghobzvzn itemgefceqbo itemgecfklmi itemgdgkfvao itemgcntyaam itemfzekuiek itemfsnigwxb itemfmsapaqx itemfmlxfesn itemflyyldte itemfihwvajb itemfibjxolh itemfgszfenf itemfbfmfwwn itemfarfjckz itemexrislmc itemevugsoko itememzbxsvv itememetlilk itemehtixtpi itemecxvrobb itemecewcqfm itemdzcyzcta itemdtbgqdwh itemdrpsvicf itemdptzjtmg itemdpeefkmc itemdmoqluuu itemdjtkdzgu itemdjqbmkcl itemdjoockbl itemdbfrqhkk itemcrviviay itemcqnlscek itemckfdzdpz itemcdqhydng itemcctghqgt itemcbrglfxf itembudgokch itembszudsfx itembsiwxfpt itembhxgurlw itembfpmshrv itembcpykxlz itembbconwra itembaihifwa itemayjjcekr itemaxuohvic itemaxqucubc itemaxagyeds itemasofcmvl itemaqtzsgvq itemaqhhxzmg itemakhlpgns itemajzcxzrn itemafwpvxgk itemadmgfkli ] min:itemndregpaq max:userrob numItems:133 modified:false}
 // Keys return all keys
 func (bkt *SyncBucket) Keys() (result []string) {
 	bkt.Set.RLock()
 	defer bkt.Set.RUnlock()
 	lenName := len(bkt.Name)
-	for _, p := range bkt.Set.pages {
-		for i, key := range p.items {
-			if i >= p.numItems {
-				break
-			}
+	res, idxPage, idxItem := bkt.last()
+	if !strings.HasPrefix(res, bkt.Name) {
+		return
+	}
+	stop := false
+	//fmt.Println(bkt.Name, idxPage, idxItem)
+	for i := idxPage; i < len(bkt.Set.pages); i++ { //_, p := range bkt.Set.pages {
+		if stop {
+			break
+		}
+		for j := idxItem; j < bkt.Set.pages[i].numItems; j++ { //, key := range p.items[i] {
+			key := bkt.Set.pages[i].items[j]
 			if strings.HasPrefix(key, bkt.Name) {
 				result = append(result, key[lenName:])
+			} else {
+				stop = true
+				break
 			}
 		}
+		idxItem = 0
 	}
 	return result
 }
@@ -263,23 +256,6 @@ func (bkt *SyncBucket) last() (result string, idxPage, idxItem int) {
 
 	set := bkt.Set
 	key := bkt.Name
-	/*
-		i := sort.Search(len(set.idxs), func(n int) bool {
-			if len(set.idxs[n]) > len(key) {
-				return set.idxs[n][:len(key)] <= key
-			}
-			return set.idxs[n] <= key
-		})
-		if i < len(set.idxs) && set.idxs[i] == key {
-			// key is present at data[i], nothing to do here
-			idxPage = i / 2
-		} else {
-			idxPage = i / 2
-			if i == len(set.idxs) {
-				//not found - append to last
-				idxPage = len(set.pages) - 1
-			}
-		}*/
 	idxPage = set.idxPage(key, true)
 	//Page
 	p := set.pages[idxPage]
@@ -369,22 +345,6 @@ func (c *Cursor) seek() (key string) {
 }
 
 func (set *OrdSet) has(key string) bool {
-	//fmt.Printf("Add %s %+v\n", key, set)
-	// sort desc
-	/*
-		i := sort.Search(len(set.idxs), func(n int) bool {
-			return set.idxs[n] <= key
-		})
-		if i < len(set.idxs) && set.idxs[i] == key {
-			// key is present at data[i], nothing to do here
-			return true
-		}
-
-		idx := i / 2
-		if i == len(set.idxs) {
-			//not found - append to last
-			idx = len(set.pages) - 1
-		}*/
 	idx := set.idxPage(key, false)
 	p := set.pages[idx]
 

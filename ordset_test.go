@@ -396,10 +396,16 @@ func TestBucket(t *testing.T) {
 		items.Put(key)
 	}
 	items.Put("003")
-	set.Put("item") //"itemitem"
+	set.Put("item") //"item", empty
 
 	assert.Equal(t, "rob", users.Cursor().Last())
 	assert.Equal(t, "259", items.Cursor().Last())
+
+	//fmt.Println(users.Keys())
+	assert.Equal(t, 6, len(users.Keys()))
+	//it := items.Keys()
+	//fmt.Println("'", it[len(it)-1], "'")
+	assert.Equal(t, 261, len(items.Keys())) //+ empty item
 
 	c := users.Cursor()
 	var first string

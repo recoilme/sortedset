@@ -1,6 +1,7 @@
 package sortedset
 
 import (
+	"encoding/binary"
 	"fmt"
 	"math/rand"
 	"runtime"
@@ -150,6 +151,16 @@ func BenchmarkHas(b *testing.B) {
 		if !h {
 			b.Fatal("bad news")
 		}
+	}
+}
+
+func BenchmarkPut(b *testing.B) {
+	set := New()
+	bin := make([]byte, 8)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		binary.BigEndian.PutUint64(bin, uint64(i))
+		set.Put(string(bin))
 	}
 }
 

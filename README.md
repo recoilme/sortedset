@@ -6,7 +6,7 @@ Package sortedset provide sorted set, with strings/binary comparator, backed by 
 
 ## Status
 
-Code review
+It work, but api not stable
 
 ## Usage
 
@@ -141,7 +141,8 @@ Put:
 goos: darwin
 goarch: amd64
 pkg: github.com/recoilme/sortedset
-BenchmarkKeys-8                18761932                87.6 ns/op            86 B/op          0 allocs/op
+BenchmarkKeys-8                 18761932              87.6 ns/op              86 B/op          0 allocs/op
+BenchmarkPut-8           		 4638753               291 ns/op              46 B/op          1 allocs/op
 BenchmarkAddAsc-8                3533504               388 ns/op              38 B/op          0 allocs/op
 BenchmarkAddAscBin-8             2423774               521 ns/op              38 B/op          0 allocs/op
 BenchmarkAddDesc-8               3155502               371 ns/op              38 B/op          0 allocs/op
